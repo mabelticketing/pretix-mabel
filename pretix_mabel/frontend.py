@@ -49,7 +49,7 @@ class MabelStep(CartMixin, TemplateFlowStep):
         return str(raven_auth.Request(url=url, desc="Ticketing"))
 
     def get_raven_redirect_url(self, request):
-        return "http://localhost:8000" + self.get_step_url(request)
+        return request.scheme + "://" +request.get_host() + self.get_step_url(request)
 
     def is_logged_in(self, request):
         return "email" in self.cart_session and MABEL_USER_TYPE_KEY in request.session
@@ -163,7 +163,6 @@ class MabelStep(CartMixin, TemplateFlowStep):
 
         if passed:
             self.cart_session['email'] = email
-            # TODO: lookup the correct user type
             if user_type == "Student":
                 self.request.session[MABEL_USER_TYPE_KEY] = UserType.COLLEGE_STUDENT.value
             elif user_type == "Alumnus":
@@ -214,20 +213,3 @@ class MabelStep(CartMixin, TemplateFlowStep):
         ctx['cart'] = self.get_cart()
         return ctx
 
-
-"""
-    TODO: 
-         - Add a login step 
-            - ref: https://github.com/pretix/pretix/blob/master/src/pretix/presale/checkoutflow.py
-            - signal is checkout_flow_steps (line 119 of the above)
-            - GET ?auth=raven should do raven auth, fetch the user type from Ibis and validate the cart 
-            - GET ?auth=sheet should display a username/password field
-            - GET should display a link to ?auth=raven and a link to ?auth=sheet
-            - POST ?auth=sheet should validate the given username and password against an admin google sheet, fetch the user type and validate the cart
-        
-         - Validation:
-            - each user type has a max ticket allowance (hard-coded for now)
-            - get the OrderPositions from the database for the given email address
-            - count the total number of positions and check it is less than the max ticket allowance
-            - raise a CartError if necessar
-"""
