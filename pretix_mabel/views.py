@@ -33,6 +33,18 @@ class MabelSettingsForm(SettingsForm):
         help_text=_(
             "API Key for Google sheets")
     )
+    ibis_proxy_url = forms.CharField(
+        label=_("IBIS proxy URL"),
+        required=True,
+        help_text=_(
+            "For example, http://emmamayball.com/ibis")
+    )
+    ibis_institution_id = forms.CharField(
+        label=_("IBIS Institution ID"),
+        required=True,
+        help_text=_(
+            "For Emmanuel College, this should be \"EMMUG\"")
+    )
 
 
 class TicketLimitForm(ModelForm):

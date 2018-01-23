@@ -108,7 +108,6 @@ class MabelStep(CartMixin, TemplateFlowStep):
                 del self.cart_session["email"]
             if MABEL_USER_TYPE_KEY in self.request.session:
                 del self.request.session[MABEL_USER_TYPE_KEY]
-            self.message = "Successfully logged out."
 
         # check if this is after a raven callback
         wls = request.GET.get("WLS-Response")
@@ -119,11 +118,18 @@ class MabelStep(CartMixin, TemplateFlowStep):
             url = self.get_raven_redirect_url(request)
             if (r.success and r.url == url):
                 if (r.issue > now - timedelta(minutes=10)):
-                    # TODO: check with ibis whether current college or university students
                     if "current" in r.ptags:
-                        user_type = UserType.COLLEGE_STUDENT
+                        # TODO: check with ibis whether current college or university students
+                        r = requests.get("http://emmamayball.com/ibis?crsid=" + r.principal)
+                        if r.status_code == 200:
+                            json = r.json()
+                            if any(
+                                    i["cancelled"] == False and 
+                                    i["instid"] == request.event.settings.ibis_institution_id
+                                    for i in json["institutions"]):
+                                user_type = UserType.COLLEGE_STUDENT
                     else:
-                        user_type = UserType.COLLEGE_ALUMNUS
+                        user_type = UserType.EXTERNAL
 
                     email = r.principal + "@cam.ac.uk"
 
