@@ -12,6 +12,7 @@ from pretix.base.payment import BasePaymentProvider
 
 from .frontend import MABEL_USER_TYPE_KEY, UserType
 
+
 class CollegeBill(BasePaymentProvider):
     identifier = 'collegebill'
     verbose_name = _('College Bill')
@@ -33,7 +34,8 @@ class CollegeBill(BasePaymentProvider):
             }}
         )
         return OrderedDict(
-            list(super().settings_form_fields.items()) + [('college_bill_details', form_field)]
+            list(super().settings_form_fields.items()) +
+            [('college_bill_details', form_field)]
         )
 
     def payment_form_render(self, request) -> str:
@@ -56,7 +58,8 @@ class CollegeBill(BasePaymentProvider):
     def payment_is_valid_session(self, request):
         user_type = UserType[request.session.get(MABEL_USER_TYPE_KEY)]
         if not user_type == UserType.COLLEGE_STUDENT:
-            messages.error(request, _("Only current students may pay for tickets via their college bill."))
+            messages.error(request, _(
+                "Only current students may pay for tickets via their college bill."))
             return False
         return True
 
@@ -91,6 +94,7 @@ class CollegeBill(BasePaymentProvider):
                'payment_info': payment_info, 'order': order}
         return template.render(ctx)
 
+
 class Cheque(BasePaymentProvider):
     identifier = 'cheque'
     verbose_name = _('Cheque')
@@ -100,7 +104,8 @@ class Cheque(BasePaymentProvider):
         form_field = I18nFormField(
             label=_('Cheque Payment Instructions'),
             widget=I18nTextarea,
-            help_text=_('Include everything that your customers need to know about paying by cheque. Where the cheque should be sent, how it should be marked up, etc...'),
+            help_text=_(
+                'Include everything that your customers need to know about paying by cheque. Where the cheque should be sent, how it should be marked up, etc...'),
             widget_kwargs={'attrs': {
                 'rows': '2',
                 'placeholder': _(
@@ -109,7 +114,8 @@ class Cheque(BasePaymentProvider):
             }}
         )
         return OrderedDict(
-            list(super().settings_form_fields.items()) + [('cheque_details', form_field)]
+            list(super().settings_form_fields.items()) +
+            [('cheque_details', form_field)]
         )
 
     def payment_form_render(self, request) -> str:
@@ -143,7 +149,7 @@ class Cheque(BasePaymentProvider):
         return template.render(ctx)
 
     def order_pending_render(self, request, order) -> str:
-        template = get_template('pretix_mabel/cheque.html')
+        template = get_template('pretix_mabel/pending_cheque.html')
         ctx = {
             'event': self.event,
             'order': order,
