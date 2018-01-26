@@ -120,14 +120,18 @@ class MabelStep(CartMixin, TemplateFlowStep):
                 if (r.issue > now - timedelta(minutes=10)):
                     if "current" in r.ptags:
                         # TODO: check with ibis whether current college or university students
-                        r = requests.get("http://emmamayball.com/ibis?crsid=" + r.principal)
-                        if r.status_code == 200:
-                            json = r.json()
+                        ibis = requests.get(request.event.settings.ibis_proxy_url  + "?crsid=" + r.principal)
+                        if ibis.status_code == 200:
+                            json = ibis.json()
                             if any(
                                     i["cancelled"] == False and 
                                     i["instid"] == request.event.settings.ibis_institution_id
                                     for i in json["institutions"]):
                                 user_type = UserType.COLLEGE_STUDENT
+                            else:
+                            	user_type = UserType.EXTERNAL
+                        else:
+                             user_type = UserType.EXTERNAL
                     else:
                         user_type = UserType.EXTERNAL
 
