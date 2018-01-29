@@ -25,7 +25,7 @@ cmdclass = {
 
 setup(
     name='pretix-mabel',
-    version='1.0.7',
+    version='1.0.10',
     description='Pretix customised for use at May Balls',
     long_description=long_description,
     url='https://github.com/mabelticketing/pretix-mabel',

@@ -118,20 +118,20 @@ class MabelStep(CartMixin, TemplateFlowStep):
             url = self.get_raven_redirect_url(request)
             if (r.success and r.url == url):
                 if (r.issue > now - timedelta(minutes=10)):
-                    if "current" in r.ptags:
-                        # TODO: check with ibis whether current college or university students
-                        ibis = requests.get(request.event.settings.ibis_proxy_url  + "?crsid=" + r.principal)
-                        if ibis.status_code == 200:
-                            json = ibis.json()
-                            if any(
-                                    i["cancelled"] == False and 
-                                    i["instid"] == request.event.settings.ibis_institution_id
-                                    for i in json["institutions"]):
-                                user_type = UserType.COLLEGE_STUDENT
-                            else:
-                            	user_type = UserType.EXTERNAL
+                #if "current" in r.ptags:
+                    crsid = r.principal
+                    # TODO: check with ibis whether current college or university students
+                    ibis = requests.get(request.event.settings.ibis_proxy_url  + "?crsid=" + crsid)
+                    if ibis.status_code == 200:
+                        json = ibis.json()
+                        allowed_ids = [i.strip() for i in request.event.settings.ibis_institution_id.split(",")]
+                        if any(
+                                i["cancelled"] == False and 
+                                any(allowed == i["instid"] for allowed in allowed_ids)
+                                for i in json["institutions"]):
+                            user_type = UserType.COLLEGE_STUDENT
                         else:
-                             user_type = UserType.EXTERNAL
+                            user_type = UserType.EXTERNAL
                     else:
                         user_type = UserType.EXTERNAL
 

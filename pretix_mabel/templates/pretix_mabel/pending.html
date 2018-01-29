@@ -2,7 +2,7 @@
 {% load l10n %}
 
 <p>{% blocktrans trimmed %}
-    {{ total }} {{ currency }} will be added to your college bill at the end of term.
+    {{ order.total | localize }} {{ event.currency }} will be added to your college bill at the end of term.
 {% endblocktrans %}</p>
 
 <p>
