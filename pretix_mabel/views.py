@@ -1,7 +1,12 @@
+import json
 from pretix.control.permissions import (
     event_permission_required, EventPermissionRequiredMixin
 )
 from django.shortcuts import redirect
+from django.db.models import Q
+from django import forms
+
+from django.views.generic.base import TemplateView, View
 from django.core.urlresolvers import resolve, reverse
 from pretix.control.views.event import (
     EventSettingsFormView, EventSettingsViewMixin)
@@ -9,6 +14,7 @@ from pretix.control.forms.event import (
     InvoiceSettingsForm,
 )
 from pretix.base.models.event import Event
+from pretix.base.models.orders import Order, OrderPosition
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 from pretix.base.forms import SettingsForm
@@ -56,6 +62,77 @@ class TicketLimitForm(ModelForm):
 
 TicketLimitFormSet = modelformset_factory(
     TicketLimit, exclude=[], can_delete=True)
+
+class StickerSheetForm(forms.Form):
+    ticket_type = forms.ModelChoiceField(
+        queryset=Item.objects.all(),
+        label=_("Ticket Type"),
+        required=False,
+        help_text=_(
+            "Ticket type to print stickers for. "
+            "Leave blank to include all types"
+            )
+    )
+    start = forms.IntegerField(
+        label=_("Start"),
+        required=False,
+        help_text=_(
+            "Start generating stickers at this ticket number. Effectively skip the first X tickets. "
+            "Leave blank to start at the beginning (ticket number 0).")
+    )
+    end = forms.IntegerField(
+        label=_("End"),
+        required=False,
+        help_text=_(
+            "Stop generating stickers after this ticket number. "
+            "Leave blank to include all remaining tickets"
+            )
+    )
+
+
+class MyTicketsView(EventPermissionRequiredMixin, TemplateView):
+    permission = 'can_view_orders'
+    template_name = 'pretix_mabel/tickets.html'
+
+    def get_context_data(self, **kwargs):
+
+        apiToken = "2yf5iasohb46bfxpyr7a5pjykjz5540srgqlrwy3qke7r9zuco8qglo2qi689lp7"
+        ctx = super().get_context_data(**kwargs)
+        print("Event")
+        print(self.request.event)
+
+        ticket_type =  self.request.GET.get('ticket_type') 
+        start =  self.request.GET.get('start') 
+        end =  self.request.GET.get('end') 
+
+        qs = OrderPosition.objects.filter(
+                order__event=self.request.event,
+            ).filter(
+                Q(order__status=Order.STATUS_PENDING) | 
+                Q(order__status=Order.STATUS_PAID)
+            ).order_by('id')
+
+        if (ticket_type):
+            qs = qs.filter(item=ticket_type)
+
+        if (start or end):
+            qs = qs[int(start or "0"):int(end or len(qs))]
+        
+
+        orders = [{
+            "id": x.id,
+            "code": x.secret,
+            "guest_name": x.attendee_name,
+            "ticket_type": str(x.item.name),
+            # "meta_info": x.meta_info,
+            } for x in qs]
+
+        ctx["tickets"] = json.dumps(orders)
+        ctx["ticket_count"] = len(orders)
+
+        ctx["sticker_form"] = StickerSheetForm(self.request.GET)
+
+        return ctx
 
 
 class MySettingsView(EventSettingsViewMixin, EventSettingsFormView):

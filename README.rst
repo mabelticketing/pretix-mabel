@@ -12,11 +12,17 @@ Development setup
 
 3. Activate the virtual environment you use for pretix development.
 
-4. Execute ``python setup.py develop`` within this directory to register this application with pretix's plugin registry.
+4. Install mabel's dependencies (``pip install -r requirements.txt``)
+ 
+5. Install our forked version of ``python-raven``: ``pip install git+https://github.com/mabelticketing/python-raven``
 
-5. Execute ``make`` within this directory to compile translations.
+6. Create the database tables we need: ``python manage.py migrate``
 
-6. Restart your local pretix server. You can now use the plugin from this repository for your events by enabling it in
+7. Execute ``python setup.py develop`` within this directory to register this application with pretix's plugin registry.
+
+8. Execute ``make`` within this directory to compile translations.
+
+9. Restart your local pretix server. You can now use the plugin from this repository for your events by enabling it in
    the 'plugins' tab in the settings.
 
 
